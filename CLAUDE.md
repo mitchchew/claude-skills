@@ -191,6 +191,40 @@ This repository publishes skills to **ClawHub** (clawhub.com) as the distributio
 
 **Quality Standard:** Each skill should save users 40%+ time while improving consistency/quality by 30%+.
 
+## Hermes VPS Access
+
+SSH access to the Hermes agent (Hetzner VPS) is configured automatically at session start via `.claude/hooks/setup-ssh-hermes.sh`.
+
+**One-time setup (done on your local machine — not inside Claude Code):**
+1. Generate a dedicated key: `ssh-keygen -t ed25519 -C "claude-code-cloud@hermes" -f ~/.ssh/claude_code_hermes -N ""`
+2. Copy public key to VPS: `ssh-copy-id -i ~/.ssh/claude_code_hermes.pub <user>@<vps-ip>`
+3. In claude.ai/code → Settings → Environment Variables, add:
+   - `HERMES_SSH_PRIVATE_KEY` — private key with newlines escaped as `\n` (get it with: `awk 'NF{printf "%s\\n", $0}' ~/.ssh/claude_code_hermes`)
+   - `HERMES_HOST` — your VPS IP or hostname
+   - `HERMES_USER` — SSH username on the VPS
+   - `HERMES_PORT` — SSH port (default: `22`)
+
+**Usage in sessions (after env vars are set, hook runs automatically):**
+```bash
+ssh hermes "your command here"
+ssh hermes "systemctl status hermes-agent"
+```
+
+**Debugging:**
+```bash
+# Check env vars are present
+printenv | grep HERMES
+
+# Re-run hook manually
+bash .claude/hooks/setup-ssh-hermes.sh
+
+# Verbose SSH for diagnosing connection issues
+ssh -v hermes echo ok
+
+# Check key permissions (must be 600)
+ls -la ~/.ssh/hermes_claude
+```
+
 ## Additional Resources
 
 - **.gitignore:** Excludes .vscode/, .DS_Store, AGENTS.md, PROMPTS.md, .env*
